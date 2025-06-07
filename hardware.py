@@ -34,7 +34,7 @@ class LCDDisplay:
 
 class ButtonArray:
     def __init__(self, pins=(5,6,7,8,9,10,11,12), debounce_ms=40):
-        self.pins = [Pin(p, Pin.IN, Pin.PULL_UP) for p in pins]
+        self.pins = [Pin(p, Pin.IN, Pin.PULL_DOWN) for p in pins]
         self.last_state = [1] * len(self.pins)
         self.debounce = debounce_ms
         self.last_press_time = [0] * len(self.pins)
