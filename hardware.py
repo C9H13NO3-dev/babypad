@@ -11,23 +11,25 @@ class LCDDisplay:
         self.lcd = I2cLcd(self.i2c, i2c_addr, rows, cols)
         self.rows = rows
         self.cols = cols
+        self._lines = ["", ""]
 
     def clear(self):
         self.lcd.clear()
+        self._lines = ["", ""]
 
     def show(self, line1, line2=""):
-        self.lcd.clear()
-        self.lcd.move_to(0, 0)
-        self.lcd.putstr(line1[:self.cols])
-        if self.rows > 1:
-            self.lcd.move_to(0, 1)
-            self.lcd.putstr(line2[:self.cols])
+        lines = [line1[:self.cols], line2[:self.cols]]
+        for row in range(min(self.rows, 2)):
+            if self._lines[row] != lines[row]:
+                self.show_line(row, lines[row])
 
     def show_line(self, row, text):
         self.lcd.move_to(0, row)
         self.lcd.putstr(" " * self.cols)
         self.lcd.move_to(0, row)
         self.lcd.putstr(text[:self.cols])
+        if row < len(self._lines):
+            self._lines[row] = text[:self.cols]
 
 
 class ButtonArray:
