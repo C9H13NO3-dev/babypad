@@ -156,10 +156,11 @@ class BabyBuddyAPI:
     # --- Status and Error Handling ---
 
     def is_connected(self):
-        # Try simple GET to base url
+        """Check API availability using authentication headers."""
         try:
-            resp = requests.get(self.base_url)
+            resp = requests.get(self.base_url, headers=self.headers)
             return resp.status_code == 200
-        except:
+        except Exception as e:
+            print(f"API connection check failed: {e}")
             return False
 
