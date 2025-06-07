@@ -107,10 +107,21 @@ class BabyBuddyAPI:
             payload.update(data)
         return self.post("timers", payload)
 
-    def stop_timer(self, timer_id, data=None):
-        """Stop timer by posting to timer endpoint with end timestamp."""
+    def finish_timer(self, activity_name, timer_id, data=None):
+        """Finalize a running timer by creating the corresponding entry."""
+        endpoint_map = {
+            "feeding": "feedings",
+            "sleep": "sleep",
+            "tummy time": "tummy-times",
+            "pumping": "pumping",
+        }
+        endpoint = endpoint_map.get(activity_name)
+        if not endpoint:
+            print(f"No endpoint for activity '{activity_name}'")
+            return None
         payload = data or {}
-        return self.post(f"timers/{timer_id}/stop", payload)
+        payload["timer"] = timer_id
+        return self.post(endpoint, payload)
 
     # --- Feeding Example ---
 
@@ -124,7 +135,7 @@ class BabyBuddyAPI:
     def stop_feeding(self, timer_id, feed_type, method):
         """Stop feeding timer with details."""
         payload = {"type": feed_type, "method": method}
-        return self.stop_timer(timer_id, payload)
+        return self.finish_timer("feeding", timer_id, payload)
 
     # --- Additional Logging Helpers ---
 

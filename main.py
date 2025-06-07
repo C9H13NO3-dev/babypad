@@ -175,7 +175,7 @@ def main():
                 # Select type
                 feed_type = select_from_list(lcd, "Feed Type?", FEED_TYPES, encoder)
                 feed_method = select_from_list(lcd, "Feed Method?", FEED_METHODS, encoder)
-                res = api.stop_timer(feeding_timer_id, data={"type": feed_type, "method": feed_method})
+                res = api.finish_timer("feeding", feeding_timer_id, data={"type": feed_type, "method": feed_method})
                 if res:
                     lcd.show("Logged!", feed_type + "/" + feed_method)
                 else:
@@ -196,7 +196,7 @@ def main():
                     lcd.show("Error: Timer", "")
                     utime.sleep(2)
             else:
-                res = api.stop_timer(sleep_timer_id)
+                res = api.finish_timer("sleep", sleep_timer_id)
                 if res:
                     lcd.show("Sleep Logged", "")
                 else:
@@ -227,7 +227,7 @@ def main():
                     lcd.show("Error: Timer", "")
                     utime.sleep(2)
             else:
-                res = api.stop_timer(tummy_timer_id)
+                res = api.finish_timer("tummy time", tummy_timer_id)
                 if res:
                     lcd.show("Tummy Logged", "")
                 else:
@@ -264,7 +264,7 @@ def main():
                     lcd.show("Error: Timer", "")
                     utime.sleep(2)
             else:
-                res = api.stop_timer(pumping_timer_id)
+                res = api.finish_timer("pumping", pumping_timer_id)
                 if res:
                     lcd.show("Pump Logged", "")
                 else:
