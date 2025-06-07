@@ -3,6 +3,7 @@
 import network
 import utime
 import ujson as json
+import ntptime
 from hardware import LCDDisplay, ButtonArray, RotaryEncoder
 from api import BabyBuddyAPI
 
@@ -22,6 +23,21 @@ def connect_wifi(ssid, password, lcd):
     lcd.show("WiFi Error", "")
     utime.sleep(2)
     return False
+
+# --- Time Synchronization ---
+def sync_time(lcd, server="time.microsoft.com"):
+    """Synchronize RTC using NTP."""
+    try:
+        lcd.show("Syncing time", server)
+        ntptime.host = server
+        ntptime.settime()
+        lcd.clear()
+        return True
+    except Exception as e:
+        lcd.show("Time sync err", str(e)[:16])
+        utime.sleep(2)
+        lcd.clear()
+        return False
 
 # --- Feeding types/methods for selection ---
 FEED_TYPES = [
@@ -83,6 +99,9 @@ def main():
     if not connect_wifi(wifi["ssid"], wifi["password"], lcd):
         while True:
             utime.sleep(1)
+
+    # --- Sync time via NTP ---
+    sync_time(lcd)
 
     # --- Init API now that WiFi is up ---
     api = BabyBuddyAPI("secrets.json")

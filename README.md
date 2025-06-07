@@ -10,6 +10,7 @@ The project allows you to start and stop feeding timers and records the data dir
 - Displays the active child and current time on a small I2C LCD
 - Start and stop feeding timers with button presses
 - Select feeding type and method using a rotary encoder
+- Syncs the clock from `time.microsoft.com` on boot
 
 ## Hardware
 
@@ -26,7 +27,7 @@ These defaults can be changed by editing `hardware.py`.
 1. Install MicroPython on your board and copy the files from this repository (`main.py`, `api.py`, `hardware.py` and `secrets.json`).
 2. Edit `secrets.json` with your Wi‑Fi credentials and Baby Buddy API token.
 3. Ensure the libraries `urequests`, `machine_i2c_lcd` and `rotary_irq` are available on the device.
-4. Reset or power up the board. Once Wi‑Fi connects, the device will display the current time and is ready to log feedings.
+4. Reset or power up the board. After connecting to Wi‑Fi, the device synchronizes the clock using `time.microsoft.com` and then displays the current time ready for logging.
 
 ## Usage
 
