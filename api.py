@@ -84,7 +84,10 @@ class BabyBuddyAPI:
         resp = self.get("timers")
         if not resp or "results" not in resp:
             return None
-        child_id = self.active_child()["id"]
+        child = self.active_child()
+        if not child:
+            return None
+        child_id = child["id"]
         for t in resp["results"]:
             if t["child"] == child_id and t["name"] == activity_name and t["end"] is None:
                 return t
@@ -92,8 +95,12 @@ class BabyBuddyAPI:
 
     def start_timer(self, activity_name, data=None):
         """Start a new timer for the active child."""
+        child = self.active_child()
+        if not child:
+            print("No active child available for timer")
+            return None
         payload = {
-            "child": self.active_child()["id"],
+            "child": child["id"],
             "name": activity_name
         }
         if data:
