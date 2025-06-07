@@ -2,6 +2,7 @@
 
 import network
 import utime
+import ujson as json
 from hardware import LCDDisplay, ButtonArray, RotaryEncoder
 from api import BabyBuddyAPI
 
@@ -69,19 +70,22 @@ def main():
     buttons = ButtonArray()
     encoder = RotaryEncoder()
 
-    # --- Load API (and WiFi secrets) ---
+    # --- Load secrets and connect WiFi ---
     try:
-        api = BabyBuddyAPI("secrets.json")
+        with open("secrets.json") as f:
+            secrets = json.load(f)
     except Exception as e:
         lcd.show("Error: Secrets", str(e))
         while True:
             utime.sleep(1)
 
-    # --- WiFi connect ---
-    wifi = api.secrets["wifi"]
+    wifi = secrets["wifi"]
     if not connect_wifi(wifi["ssid"], wifi["password"], lcd):
         while True:
             utime.sleep(1)
+
+    # --- Init API now that WiFi is up ---
+    api = BabyBuddyAPI("secrets.json")
 
     # --- Baby Buddy API connect ---
     lcd.show("Connecting...", "")
