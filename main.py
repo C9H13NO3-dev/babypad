@@ -61,6 +61,33 @@ def select_from_list(lcd, title, options, encoder):
             return options[idx]
         utime.sleep(0.05)
 
+def select_with_arrow(lcd, options, encoder):
+    """Display all options on one line with a moving arrow underneath."""
+    row = " ".join(options)
+    if len(row) > lcd.cols:
+        raise ValueError("Options string too long for display")
+    positions = []
+    pos = 0
+    for opt in options:
+        positions.append(pos)
+        pos += len(opt) + 1  # space after each option
+    if positions:
+        positions[-1] = min(positions[-1], lcd.cols - 1)  # ensure arrow in bounds
+    idx = 0
+    encoder.reset(0)
+    while True:
+        arrow = " " * lcd.cols
+        if positions[idx] < lcd.cols:
+            arrow = arrow[:positions[idx]] + "^" + arrow[positions[idx] + 1:]
+        lcd.show(row, arrow)
+        diff = encoder.get()
+        if diff != 0:
+            idx = (idx + diff) % len(options)
+        if encoder.button_pressed():
+            utime.sleep(0.2)
+            return options[idx]
+        utime.sleep(0.05)
+
 def input_number(lcd, title, encoder, initial=0, step=1, min_val=0, max_val=100):
     """Simple numeric input using the rotary encoder."""
     val = initial
@@ -207,7 +234,9 @@ def main():
                 sleep_start_time = None
 
         elif btn == 2:  # Button 3 - Diaper change
-            option = select_from_list(lcd, "Diaper?", ["Wet", "Solid", "Both"], encoder)
+            lcd.show("Diaper Change", "")
+            utime.sleep(0.5)
+            option = select_with_arrow(lcd, ["Wet", "Solid", "Both"], encoder)
             wet = option in ("Wet", "Both")
             solid = option in ("Solid", "Both")
             if api.log_diaper_change(wet=wet, solid=solid):
