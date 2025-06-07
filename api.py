@@ -119,6 +119,33 @@ class BabyBuddyAPI:
         payload = {"type": feed_type, "method": method}
         return self.stop_timer(timer_id, payload)
 
+    # --- Additional Logging Helpers ---
+
+    def log_diaper_change(self, wet=True, solid=False):
+        """Log a diaper change entry."""
+        payload = {
+            "child": self.active_child()["id"],
+            "wet": 1 if wet else 0,
+            "solid": 1 if solid else 0,
+        }
+        return self.post("changes", payload)
+
+    def log_weight(self, weight):
+        """Log a weight measurement (in grams)."""
+        payload = {
+            "child": self.active_child()["id"],
+            "weight": weight,
+        }
+        return self.post("weight", payload)
+
+    def log_temperature(self, temperature):
+        """Log a temperature measurement in Celsius."""
+        payload = {
+            "child": self.active_child()["id"],
+            "temperature": temperature,
+        }
+        return self.post("temperature", payload)
+
     # --- Status and Error Handling ---
 
     def is_connected(self):

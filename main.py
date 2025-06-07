@@ -44,6 +44,25 @@ def select_from_list(lcd, title, options, encoder):
             return options[idx]
         utime.sleep(0.05)
 
+def input_number(lcd, title, encoder, initial=0, step=1, min_val=0, max_val=100):
+    """Simple numeric input using the rotary encoder."""
+    val = initial
+    encoder.reset(0)
+    lcd.show(title, str(val))
+    while True:
+        diff = encoder.get()
+        if diff != 0:
+            val += diff * step
+            if val < min_val:
+                val = min_val
+            if val > max_val:
+                val = max_val
+            lcd.show(title, str(val))
+        if encoder.button_pressed():
+            utime.sleep(0.2)
+            return val
+        utime.sleep(0.05)
+
 def main():
     # --- Init hardware ---
     lcd = LCDDisplay()
@@ -75,6 +94,15 @@ def main():
     feeding_active = False
     feeding_timer_id = None
     feeding_start_time = None
+    sleep_active = False
+    sleep_timer_id = None
+    sleep_start_time = None
+    tummy_active = False
+    tummy_timer_id = None
+    tummy_start_time = None
+    pumping_active = False
+    pumping_timer_id = None
+    pumping_start_time = None
 
     # --- Main loop ---
     while True:
@@ -86,7 +114,22 @@ def main():
             elapsed = utime.time() - feeding_start_time
             t_h = elapsed // 3600
             t_m = (elapsed % 3600) // 60
-            lcd.show(f"{initials}   {timestr}", "Timer: %02d:%02d" % (t_h, t_m))
+            lcd.show(f"{initials}   {timestr}", "Feed %02d:%02d" % (t_h, t_m))
+        elif sleep_active:
+            elapsed = utime.time() - sleep_start_time
+            t_h = elapsed // 3600
+            t_m = (elapsed % 3600) // 60
+            lcd.show(f"{initials}   {timestr}", "Sleep %02d:%02d" % (t_h, t_m))
+        elif tummy_active:
+            elapsed = utime.time() - tummy_start_time
+            t_h = elapsed // 3600
+            t_m = (elapsed % 3600) // 60
+            lcd.show(f"{initials}   {timestr}", "Tummy %02d:%02d" % (t_h, t_m))
+        elif pumping_active:
+            elapsed = utime.time() - pumping_start_time
+            t_h = elapsed // 3600
+            t_m = (elapsed % 3600) // 60
+            lcd.show(f"{initials}   {timestr}", "Pump %02d:%02d" % (t_h, t_m))
         else:
             lcd.show(f"{initials}   {timestr}", "Ready")
 
@@ -118,6 +161,100 @@ def main():
                 feeding_active = False
                 feeding_timer_id = None
                 feeding_start_time = None
+
+        elif btn == 1:  # Button 2 - Sleep timer
+            if not sleep_active:
+                res = api.start_timer("sleep")
+                if res and "id" in res:
+                    sleep_active = True
+                    sleep_timer_id = res["id"]
+                    sleep_start_time = utime.time()
+                else:
+                    lcd.show("Error: Timer", "")
+                    utime.sleep(2)
+            else:
+                res = api.stop_timer(sleep_timer_id)
+                if res:
+                    lcd.show("Sleep Logged", "")
+                else:
+                    lcd.show("API Error", "")
+                utime.sleep(2)
+                sleep_active = False
+                sleep_timer_id = None
+                sleep_start_time = None
+
+        elif btn == 2:  # Button 3 - Diaper change
+            option = select_from_list(lcd, "Diaper?", ["Wet", "Solid", "Both"], encoder)
+            wet = option in ("Wet", "Both")
+            solid = option in ("Solid", "Both")
+            if api.log_diaper_change(wet=wet, solid=solid):
+                lcd.show("Diaper Logged", option)
+            else:
+                lcd.show("API Error", "")
+            utime.sleep(2)
+
+        elif btn == 3:  # Button 4 - Tummy time timer
+            if not tummy_active:
+                res = api.start_timer("tummy time")
+                if res and "id" in res:
+                    tummy_active = True
+                    tummy_timer_id = res["id"]
+                    tummy_start_time = utime.time()
+                else:
+                    lcd.show("Error: Timer", "")
+                    utime.sleep(2)
+            else:
+                res = api.stop_timer(tummy_timer_id)
+                if res:
+                    lcd.show("Tummy Logged", "")
+                else:
+                    lcd.show("API Error", "")
+                utime.sleep(2)
+                tummy_active = False
+                tummy_timer_id = None
+                tummy_start_time = None
+
+        elif btn == 4:  # Button 5 - Weight entry
+            weight = input_number(lcd, "Weight g?", encoder, initial=3500, step=10, min_val=0, max_val=20000)
+            if api.log_weight(weight):
+                lcd.show("Weight Logged", str(weight) + " g")
+            else:
+                lcd.show("API Error", "")
+            utime.sleep(2)
+
+        elif btn == 5:  # Button 6 - Temperature entry
+            temp = input_number(lcd, "Temp C?", encoder, initial=37, step=1, min_val=30, max_val=45)
+            if api.log_temperature(temp):
+                lcd.show("Temp Logged", str(temp) + " C")
+            else:
+                lcd.show("API Error", "")
+            utime.sleep(2)
+
+        elif btn == 6:  # Button 7 - Pumping timer
+            if not pumping_active:
+                res = api.start_timer("pumping")
+                if res and "id" in res:
+                    pumping_active = True
+                    pumping_timer_id = res["id"]
+                    pumping_start_time = utime.time()
+                else:
+                    lcd.show("Error: Timer", "")
+                    utime.sleep(2)
+            else:
+                res = api.stop_timer(pumping_timer_id)
+                if res:
+                    lcd.show("Pump Logged", "")
+                else:
+                    lcd.show("API Error", "")
+                utime.sleep(2)
+                pumping_active = False
+                pumping_timer_id = None
+                pumping_start_time = None
+
+        elif btn == 7:  # Button 8 - Switch child
+            api.next_child()
+            lcd.show("Active Child", api.child_initials())
+            utime.sleep(1)
 
         utime.sleep(0.1)
 
